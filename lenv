@@ -203,7 +203,8 @@ sub getVerLine
 sub installRocks
 {
     my $instpath = shift;
-    my @line = getVerLine( $ROCKS_VERS_TXT, 'latest' ) or die "version 'latest' not found";
+    my $rocksver = shift;
+    my @line = getVerLine( $ROCKS_VERS_TXT, $rocksver ) or die "version '$rocksver' not found";
     my $dest = extract( download( @line ) );
     my $installer = "$TMP_DIR/install.sh";
     my $args = join( ' ', @ARGV );
@@ -271,7 +272,7 @@ _EOS_
 
 sub cmdInstall
 {
-    my ( $txt, $ver, $instpath, $prefix, $postflight ) = @_;
+    my ( $txt, $ver, $rocksver, $instpath, $prefix, $postflight ) = @_;
     my @line = getVerLine( $txt, $ver ) or die "version $ver not found";
     my $dest = extract( download( @line ) );
     my $installer = "$TMP_DIR/install.sh";
@@ -303,7 +304,7 @@ _EOS_
     close( $fh );
     shcall("sh $installer");
 
-    installRocks( $instpath );
+    installRocks( $instpath, $rocksver );
 }
 
 
@@ -327,16 +328,18 @@ sub getPlatform
 sub cmdInstallLua
 {
     my $ver = shift @ARGV;
+    my $rocksver = shift @ARGV;
     my $instpath = "$LUA_DIR/$ver";
 
     unshift( @ARGV, getPlatform() ) if !@ARGV;
-    cmdInstall( $LUA_VERS_TXT, $ver, $instpath, "INSTALL_TOP=$instpath" );
+    cmdInstall( $LUA_VERS_TXT, $ver, $rocksver, $instpath, "INSTALL_TOP=$instpath" );
 }
 
 
 sub cmdInstallLuaJIT
 {
     my $ver = shift @ARGV;
+    my $rocksver = shift @ARGV;
     my $instpath = "$LUAJIT_DIR/$ver";
     my $postflight = <<_EOS_;
 
@@ -369,7 +372,7 @@ ln -s \$PWD/luajit-*/* lua/*/
 
 _EOS_
 
-    cmdInstall( $LUAJIT_VERS_TXT, $ver, $instpath, "PREFIX=$instpath", $postflight );
+    cmdInstall( $LUAJIT_VERS_TXT, $ver, $rocksver, $instpath, "PREFIX=$instpath", $postflight );
 }
 
 
@@ -654,14 +657,14 @@ Usage:
     lenv fetch                          Fetch remote versions
     lenv vers                           List available versions
     lenv ls                             List installed versions
-    lenv install <version> <opt...>     Download and install a <version> of lua
-                                        with luarocks
-    lenv install-lj <version> <opt...>  Download and install a <version> of
-                                        luajit with luarocks
-    lenv uninstall <version>            Uninstall a <version> of lua
-    lenv uninstall-lj <version>         Uninstall a <version> of luajit
-    lenv use <version>                  Use a <version> of lua
-    lenv use-lj <version>               Use a <version> of luajit
+    lenv install <ver> <rver> <opt>     Download and install a <ver> of lua
+                                        with <rver> luarocks
+    lenv install-lj <ver> <rver> <opt>  Download and install a <ver> of
+                                        luajit with <rver> luarocks
+    lenv uninstall <ver>                Uninstall a <ver> of lua
+    lenv uninstall-lj <ver>             Uninstall a <ver> of luajit
+    lenv use <ver>                      Use a <ver> of lua
+    lenv use-lj <ver>                   Use a <ver> of luajit
 
 _EOS_
 
